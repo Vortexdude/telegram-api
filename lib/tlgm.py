@@ -1,4 +1,4 @@
-import requests, json
+import requests, json, time
 
 
 # .  Created by - Nitin Namdev
@@ -22,26 +22,36 @@ import requests, json
 # > print(responce)
 
 
-
 class telegram():
+    g_base_url = "https://api.telegram.org/bot"
 
     def __init__(self, token, chat_id):
         self.chat_id = chat_id
         self.token = token
+        self.base_url = self.g_base_url + self.token + '/'
+
+    def sendTxt(self, msg):
+        self.base_url += 'sendMessage'
+        parameters = {'chat_id': self.chat_id, 'text': msg}
+        r = requests.get(url = self.base_url, params=parameters)
+        return json.loads(json.dumps(r.json()))
 
     def sendMessage(self, text):
-        base_url = "https://api.telegram.org/bot"
         if self.chat_id:
             if text == '':
                 return "Message can't be emply !"  
-            parameters = {'chat_id': self.chat_id, 'text': text}
-            full_url = f"{base_url}{self.token}/sendMessage"
-            r = requests.get(url = full_url, params=parameters)
-            responce_data =  json.loads(json.dumps(r.json()))
-            status = responce_data['ok']
-            if status:
+            responce_data = self.sendTxt(text)
+            if responce_data['ok']:
                 return 'Messages Send Succesfully!'
             else:
                 return 'There is problem with the data you can check by check the respoce data %s' % responce_data 
         else:
             return "Please provide the chat_id!"
+            
+    def send_current_time(self):
+        text = time.strftime("%H:%M:%S", time.localtime())
+        responce_data = self.sendTxt(text)
+        if responce_data['ok']:
+            return 'Messages Send Succesfully! with current time - ' + text
+        else:
+            return 'There is problem with the data you can check by check the respoce data %s' % responce_data 
